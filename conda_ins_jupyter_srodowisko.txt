@@ -1,0 +1,6 @@
+conda create -n projekt1 python=3.11 - stworzenie projektu w conda
+conda config --append channels conda-forge 
+conda install -c conda-forge jupyterlab   - instalacja jupyter lab na świeżym środowisku
+
+Następnie na innym komputerze, aby odtworzyć środowisko, wykonaj:
+conda env create -f environment_p2.yaml
