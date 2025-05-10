@@ -49,19 +49,17 @@ def extract_and_execute_notebook_logic(csv_input_path, final_output_path):
     cells_to_skip_completely_by_content = [
         "df.head(", "df.sample(", ".plot_model(",
         "plt.figure(", "sns.heatmap(", "df.describe().T",
-        "print(df_price1['Price']", # Te printy wartości są dla EDA
-        "exp.dataset_transformed.sample(10)", # To jest wyświetlanie
-        "unbalanced_metrics_df", # Wyświetlanie ramki
-        "best_final_model", # Wyświetlanie obiektu modelu
-        "predictions", # Wyświetlanie ramki
-        "merged_df", # Wyświetlanie ramki
-        "merged_df2" # Wyświetlanie ramki
+        "print(df_price1['Price']", 
+        "exp.dataset_transformed.sample(10)",
+        "unbalanced_metrics_df", 
+        "best_final_model", # Wyświetlanie obiektu modelu, nie jego wyniku
+        # "predictions", # Zostawiamy, bo może być użyte do zapisu
+        "merged_df", # Zostawiamy, bo to finalny df
+        "merged_df2" 
     ]
-    # Pomijanie konkretnych plików zapisu, które nie są finalnym outputem
     intermediate_saves_to_skip = [
         "df_last.to_csv('0_new_prices.csv')",
         "merged_df.to_csv('0_new_prices_full.csv')",
-        # "merged_df.to_csv('uzupelnione_mieszkania_ceny.csv')" # Ten chcemy zastąpić
     ]
 
     for cell in notebook_content['cells']:
@@ -72,38 +70,37 @@ def extract_and_execute_notebook_logic(csv_input_path, final_output_path):
             
             cell_content_str = "".join(source_lines)
 
-            # Pomijanie komórek wyświetlających tylko DataFrame lub goły obiekt
             if cell_content_str.strip() in ["df", "df_beznull_price", "df_price1", "df_price2"]:
-                logging.info(f"Pominięto komórkę wyświetlającą: {cell_content_str.strip()[:60]}...")
+                logging.info(f"Pominięto komórkę wyświetlającą DataFrame: {cell_content_str.strip()[:60]}...")
                 continue
             
-            # Pomijanie komórek zdefiniowanych przez ich zawartość (np. plotting)
             if any(skip_phrase in cell_content_str for skip_phrase in cells_to_skip_completely_by_content):
-                 # Ale nie pomijaj, jeśli to predict_model, bo może być potrzebne
-                if "exp.predict_model" not in cell_content_str and "pull()" not in cell_content_str:
-                    logging.info(f"Pominięto komórkę EDA/plot: {cell_content_str.strip()[:60]}...")
+                if "exp.predict_model" not in cell_content_str and "pull()" not in cell_content_str and "best_final_model =" not in cell_content_str:
+                    logging.info(f"Pominięto komórkę EDA/plot/print: {cell_content_str.strip()[:60]}...")
                     continue
             
-            # Modyfikacja ścieżki wczytywania danych
             cell_content_str = cell_content_str.replace(
                 "pd.read_csv('uzupelnione_mieszkania.csv', sep=',')",
                 f"pd.read_csv(r'{csv_input_path}', sep=',') # ZMODYFIKOWANE PRZEZ SKRYPT"
             )
             cell_content_str = cell_content_str.replace(
-                "pd.read_csv('uzupelnione_mieszkania.csv')", # Jeśli bez sep=','
+                "pd.read_csv('uzupelnione_mieszkania.csv')", 
                 f"pd.read_csv(r'{csv_input_path}') # ZMODYFIKOWANE PRZEZ SKRYPT"
             )
-             # Modyfikacja ścieżki zapisu modelu
             cell_content_str = cell_content_str.replace(
                 "exp.save_model(best_final_model, \"0_best_price_modelLGBM\"",
-                f"exp.save_model(best_final_model, r'{os.path.join(DATA_OUT_DIR, \"0_best_price_modelLGBM_auto\")}'"
+                f"exp.save_model(best_final_model, r'{os.path.join(DATA_OUT_DIR, '0_best_price_modelLGBM_auto')}'"
             )
             cell_content_str = cell_content_str.replace(
-                "model = load_model('6_best_price_modelLGBM')", # Jeśli ładowany jest model
-                f"model = load_model(r'{os.path.join(DATA_OUT_DIR, \"0_best_price_modelLGBM_auto\")}') # ZMODYFIKOWANE"
+                "model = load_model('6_best_price_modelLGBM')", 
+                f"model = load_model(r'{os.path.join(DATA_OUT_DIR, '0_best_price_modelLGBM_auto')}') # ZMODYFIKOWANE"
+            )
+            cell_content_str = cell_content_str.replace( # Na wypadek gdybyś użył tej nazwy pliku w innym miejscu
+                "uzupelnione_mieszkania_ceny.csv",
+                f"{os.path.join(DATA_OUT_DIR, 'uzupelnione_mieszkania_ceny_auto.csv')}"
             )
 
-            # Pomijanie specyficznych zapisów pośrednich
+
             for save_call in intermediate_saves_to_skip:
                 if save_call in cell_content_str:
                     cell_content_str = cell_content_str.replace(save_call, f"# {save_call} # SKRYPT POMINĄŁ TEN ZAPIS")
@@ -111,64 +108,69 @@ def extract_and_execute_notebook_logic(csv_input_path, final_output_path):
 
             python_code_segments.append(cell_content_str)
 
-            # Wstrzyknięcie kodu naprawiającego problem z kolumną 'Description'
-            # po zdefiniowaniu df_price2
             if "df_price2 = df_price1.dropna(subset=['Price'])" in cell_content_str:
                 fix_code = """
-# ----- POCZĄTEK KODU WSTRZYKNIĘTEGO PRZEZ SKRYPT -----
+# ----- POCZĄTEK KODU WSTRZYKNIĘTEGO PRZEZ SKRYPT (Naprawa Description) -----
 if 'df_price2' in locals() and isinstance(df_price2, pd.DataFrame):
-    logging.info("Sprawdzanie i potencjalne usuwanie kolumny 'Description' z df_price2...")
     if 'Description' in df_price2.columns:
         df_price2 = df_price2.drop(columns=['Description'], errors='ignore')
-        logging.info("Kolumna 'Description' została usunięta z df_price2.")
-    else:
-        logging.info("Kolumna 'Description' nie istnieje w df_price2.")
-else:
-    logging.warning("Ramka danych df_price2 nie została znaleziona po jej oczekiwanym utworzeniu.")
+        logging.info("Kolumna 'Description' została usunięta z df_price2 przed setupem PyCaret.")
 # ----- KONIEC KODU WSTRZYKNIĘTEGO PRZEZ SKRYPT -----
 """
                 python_code_segments.append(fix_code)
                 logging.info("Wstrzyknięto kod naprawczy dla kolumny 'Description' po utworzeniu df_price2.")
     
-    # Dodanie zapisu finalnego pliku CSV na końcu skryptu
     final_save_code = f"""
 # ----- POCZĄTEK FINALNEGO ZAPISU WSTRZYKNIĘTEGO PRZEZ SKRYPT -----
+# Ostatnia komórka Twojego notebooka zapisuje 'merged_df' do 'uzupelnione_mieszkania_ceny.csv'
+# Zamiast tego, zapiszemy ją do {OUTPUT_FILENAME} w {DATA_OUT_DIR}
+final_df_to_save = None
 if 'merged_df' in locals() and isinstance(merged_df, pd.DataFrame):
-    try:
-        output_path_script = r'{final_output_path}'
-        merged_df.to_csv(output_path_script, index=False, sep=',')
-        logging.info(f"Finalna ramka danych 'merged_df' zapisana do: {{output_path_script}}")
-    except Exception as e_save:
-        logging.error(f"Błąd podczas zapisywania merged_df: {{e_save}}")
-elif 'predictions' in locals() and isinstance(predictions, pd.DataFrame): # Fallback
-    try:
-        output_path_script = r'{final_output_path}'
-        predictions.to_csv(output_path_script, index=False, sep=',')
-        logging.info(f"Ramka danych 'predictions' zapisana do: {{output_path_script}}")
-    except Exception as e_save:
-        logging.error(f"Błąd podczas zapisywania predictions: {{e_save}}")
+    final_df_to_save = merged_df
+    df_name_for_log = 'merged_df'
+elif 'predictions' in locals() and isinstance(predictions, pd.DataFrame) and 'prediction_label' in predictions.columns:
+    # Jeśli 'merged_df' nie istnieje, ale 'predictions' tak i ma wyniki
+    # Możliwe, że chcesz zapisać `predictions` z dodaną kolumną 'SaleId'
+    if 'SaleId' in locals() and isinstance(SaleId, pd.Series): # Zakładając, że 'SaleId' to seria zresetowana
+         temp_df = pd.DataFrame({{'SaleId': SaleId, 'prediction_label': predictions['prediction_label']}})
+         # Można by spróbować zmergować z oryginalnym df_price2 lub czymś podobnym
+         # Ale dla prostoty, zapiszmy to co mamy
+         final_df_to_save = temp_df
+         df_name_for_log = 'predictions (SaleId + prediction_label)'
+    else:
+        final_df_to_save = predictions
+        df_name_for_log = 'predictions'
 else:
-    logging.warning("Nie znaleziono ramki danych 'merged_df' ani 'predictions' do zapisu jako wynik końcowy.")
+    logging.warning("Nie znaleziono odpowiedniej ramki danych ('merged_df' lub 'predictions') do zapisu jako wynik końcowy.")
+
+if final_df_to_save is not None:
+    try:
+        output_path_script = r'{final_output_path}'
+        final_df_to_save.to_csv(output_path_script, index=False, sep=',')
+        logging.info("Finalna ramka danych '%s' zapisana do: %s", df_name_for_log, output_path_script)
+    except Exception as e_save:
+        logging.error("Błąd podczas zapisywania final_df_to_save ('%s'): %s", df_name_for_log, e_save)
 # ----- KONIEC FINALNEGO ZAPISU WSTRZYKNIĘTEGO PRZEZ SKRYPT -----
 """
     python_code_segments.append(final_save_code)
 
     full_script = "\n".join(python_code_segments)
     
-    # Przygotowanie globalnego zakresu dla exec, wstrzyknięcie pandas i logging
-    # PyCaret i inne biblioteki z notebooka zostaną zaimportowane przez kod z notebooka
     execution_globals = {
         "pd": pd, 
         "logging": logging,
-        "__name__": "__main__", # Symulacja uruchomienia jako główny skrypt
-        "os": os, # Może być potrzebne w notebooku
-        "sys": sys # Może być potrzebne w notebooku
+        "__name__": "__main__", 
+        "os": os, 
+        "sys": sys,
+        # Dodajemy zmienne ścieżek, aby były dostępne, jeśli notebook ich używa bezpośrednio (choć nie powinien)
+        "DATA_DIR": DATA_DIR,
+        "DATA_OUT_DIR": DATA_OUT_DIR,
+        "csv_input_path": csv_input_path, # Na wypadek, gdyby był używany bezpośrednio
+        "final_output_path": final_output_path # Na wypadek, gdyby był używany bezpośrednio
     }
 
     logging.info("--- Rozpoczęcie wykonywania logiki z notebooka ---")
     try:
-        # Uruchomienie zaimportowanych modułów i kodu z notebooka
-        # Pierwsza komórka notebooka zawiera importy, więc powinny być dostępne
         exec(full_script, execution_globals)
         logging.info("--- Zakończono wykonywanie logiki z notebooka ---")
     except Exception as e:
@@ -178,11 +180,9 @@ else:
 
 
 class ModelTrainingHandler(FileSystemEventHandler):
-    """Obsługuje zdarzenia w systemie plików."""
     def on_created(self, event):
         if not event.is_directory and os.path.basename(event.src_path) == TRIGGER_FILE:
             logging.info(f"Wykryto nowy plik: {event.src_path}")
-            # Krótka pauza, aby upewnić się, że plik jest w pełni zapisany
             time.sleep(5) 
             
             csv_file_to_process = event.src_path
@@ -195,7 +195,7 @@ if __name__ == "__main__":
 
     event_handler = ModelTrainingHandler()
     observer = Observer()
-    observer.schedule(event_handler, DATA_DIR, recursive=False) # Nie przeszukuj podkatalogów
+    observer.schedule(event_handler, DATA_DIR, recursive=False) 
     
     logging.info(f"Nasłuchiwanie na zmiany w katalogu: {DATA_DIR}")
     logging.info(f"Oczekiwany plik: {TRIGGER_FILE}")
