@@ -1,0 +1,10 @@
+data.csv
+data_out.csv
+DATA/
+DATA_OUT/
+*.pkl
+debug_generated_script.py
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+*.log
