@@ -1,0 +1,32 @@
+Po ściągnięciu z repozytorium github, aby uruchomić nasłuch:
+
+1. należy doinstalować bibliotekę watchdog, można to zrobić na parę sposobów:
+uruchamiając w condzie nasze środowisko i wpisując instrukcję:
+conda install -y watchdog
+
+lub znów wczytując całe środowisko tym razem z pliku environment_p3.yaml poleceniem:
+conda env export > environment_p3.yaml
+
+2. Należy wyedytować plik start_nasluch.bat i podać aktualną ścieżkę do katalogu condy,
+w zasadzie chodzi o dokładną ścieżkę do jej pliku activate.bat co pozwala na uruchumienie
+całej aplikacji bez uruchamiania środowiska i innych aplikacji.
+u mnie jest:
+CALL C:\Tomek\Conda\condabin\activate.bat projekt1
+
+ale należy podać tak:
+CALL C:\[ścieżka instalacyjna Condy]\condabin\activate.bat (nazwa środowiska)
+
+3. Można w katalogu w którym jest start_nasluch.bat stworzyć dwa katalogi o ile same się nie 
+utworzą po pierwszym uruchomieniu:  DATA, DATA_OUT
+Można ich skróty swobodnie wyciągnąć na pulpit i tak zadziała.
+
+W katalogu DATA prowadzony jest nasłuch. Jeśli uruchomimy start_nasluch.bat od tej pory otworzy się
+konsola z informacją o prowadzonym nasłuchu. Aplikacja oczekuje pliku data.csv
+Gdy tylko plik znajdzie się w katalogu DATA aplikacja rozpoczyna przetwarzanie skryptem aż do uzyskania
+wyniku w postaci bazy data_out.csv. Jest wynikowa baza danych czyli dokładnie ta sama co wrzucono
+do katalogu DATA rozszerzona o dodatkową kolumnę z predykcją ceny, która znajduje się tuż obok
+wzorcowej. 
+Dodatkowo do katalogu DATA_OUT wrzucany jest plik z wytrenowanym modelem: 0_best_price_modelLGBM_auto.pkl
+
+Ważne: w katalogu przed uruchomieniem .bat może znajdować się już wcześniej załadowany tam plik, jednak
+nasłuch pominie go i będzie czekać na zupełnie nowy plik data.csv
