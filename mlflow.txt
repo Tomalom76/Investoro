@@ -1,0 +1,21 @@
+Jeżeli nie pomógł import nowego środowiska, co najmniej:
+environment_p4.yaml
+
+Przygotowanie MLFlow:
+
+Uwaga: ale to ruszy tylko dla wersji pycaret == 3.3.2
+zdowngradować :
+pip uninstall mlflow matplotlib
+
+i zainstalować te wersje, wtedy mlflow ruszy:
+pip install mlflow==2.2.2 matplotlib==3.7.2
+
+Dla sprawdzenia czy na pewno są nowe wersję wpisz w notebooku (tylko zrestartuj kernel) w jednej komórce i uruchom:
+import mlflow
+import matplotlib
+print("matplotlib:", matplotlib.__version__)
+print("mlflow:", mlflow.__version__)
+
+odpowiedź ma być:
+matplotlib: 3.7.2
+mlflow: 2.2.2
