@@ -8,3 +8,9 @@ __pycache__/
 *.pyc
 .ipynb_checkpoints/
 *.log
+1JSON/
+1JSON_OUT
+mlruns/
+mlruns_DIRECT_LOCAL_TEST/
+1JSON_PREDICT_IN/
+1JSON_PREDICT_OUT/
