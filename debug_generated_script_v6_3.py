@@ -500,7 +500,7 @@ with mlflow.start_run(run_name=f'Automated_Run_NB63_{{time.strftime("%Y%m%d-%H%M
                      logging.warning("Kolumna 'PredictedPrice_LGBM' nie została dodana do output_df po merge.")
     
                 try:
-                    output_path_final_script = r'C:\Tomek\Projekty\Investoro\DATA_OUT\data_out_20250530_180939.csv'
+                    output_path_final_script = r'C:\Tomek\Projekty\Investoro\DATA_OUT\data_out_20250602_124028.csv'
                     output_df.to_csv(output_path_final_script, index=False, sep=',')
                     logging.info("Finalny DataFrame (oryginalne dane + predykcje) zapisany do: %s", output_path_final_script)
                     if mlflow.active_run():

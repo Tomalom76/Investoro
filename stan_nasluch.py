@@ -310,7 +310,8 @@ def main():
                 # print(".", end="", flush=True)
                 pass
 
-            time.sleep(10)  # Sprawdzaj co 10 sekund
+            #time.sleep(10)  # Sprawdzaj co 10 sekund
+            break
 
         except Exception as e:
             print(f"Wystąpił nieoczekiwany błąd w głównej pętli treningu: {e}")
