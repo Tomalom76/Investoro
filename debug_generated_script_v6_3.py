@@ -318,16 +318,16 @@ with mlflow.start_run(run_name=f'Automated_Run_NB63_{{time.strftime("%Y%m%d-%H%M
     df_transformed["Price"] = get_config("y_train")
     
     # Rysowanie wykresów
-    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    #fig, axes = plt.subplots(1, 2, figsize=(12, 6))
     
-    sns.histplot(df_raw["Price"], ax=axes[0])
-    axes[0].set_title("Raw Data")
+    #sns.histplot(df_raw["Price"], ax=axes[0])
+    #axes[0].set_title("Raw Data")
     
-    sns.histplot(df_transformed["Price"], ax=axes[1])
-    axes[1].set_title("Transformed Data")
+    #sns.histplot(df_transformed["Price"], ax=axes[1])
+    #axes[1].set_title("Transformed Data")
     
-    plt.tight_layout()
-    plt.show()
+    #plt.tight_layout()
+    #plt.show()
     reg_exp.plot_model(best_model_from_compare, plot='feature')
     if reg_exp and best_model_from_compare:
         print("Predykcja na zbiorze testowym (z podziału PyCaret) przy użyciu dostrojonego modelu:")
@@ -500,7 +500,7 @@ with mlflow.start_run(run_name=f'Automated_Run_NB63_{{time.strftime("%Y%m%d-%H%M
                      logging.warning("Kolumna 'PredictedPrice_LGBM' nie została dodana do output_df po merge.")
     
                 try:
-                    output_path_final_script = r'C:\Tomek\Projekty\Investoro\DATA_OUT\data_out_20250526_171627.csv'
+                    output_path_final_script = r'C:\Tomek\Projekty\Investoro\DATA_OUT\data_out_20250530_180939.csv'
                     output_df.to_csv(output_path_final_script, index=False, sep=',')
                     logging.info("Finalny DataFrame (oryginalne dane + predykcje) zapisany do: %s", output_path_final_script)
                     if mlflow.active_run():
