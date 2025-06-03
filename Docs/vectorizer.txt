@@ -1,0 +1,62 @@
+co robią poszczególne zmienne z tego:
+
+location_vectorizer = TfidfVectorizer(
+max_features=100,
+stop_words=None,
+ngram_range=(1, 1),
+min_df=5,
+max_df=0.95
+)
+
+Odpowiedź:
+
+1.max_features=100:
+Co robi: Ogranicza liczbę cech (słów/tokenów) w wynikowej macierzy TF-IDF do 100 najważniejszych. "Ważność" jest tutaj zazwyczaj 	określana przez częstotliwość występowania termów w całym korpusie dokumentów (na których fit_transform jest wywoływane).
+Dlaczego się używa:
+	Redukcja wymiarowości: Zapobiega tworzeniu bardzo szerokiej macierzy cech, co jest szczególnie przydatne, gdy słownik jest duży. 	Zmniejsza to zapotrzebowanie na pamięć i czas obliczeń.
+	Usuwanie rzadkich i potencjalnie mało informacyjnych słów: Skupia się na słowach, które są bardziej reprezentatywne dla całego 	zbioru.
+	Zapobieganie przeuczeniu: Zbyt duża liczba cech (zwłaszcza tych rzadkich) może prowadzić do przeuczenia modelu.
+
+W Twoim przypadku: Z tekstów w kolumnie Location zostanie wybranych 100 najczęściej występujących słów (po uwzględnieniu innych parametrów 	jak min_df, max_df), które staną się kolumnami w macierzy TF-IDF.
+	
+2.stop_words=None:
+Co robi: Określa listę słów (tzw. "stop words" lub słowa funkcyjne), które mają być ignorowane podczas tworzenia słownika i wektoryzacji. 	Przykłady to "i", "o", "w", "się", "the", "a", "is" itp.
+	None (wartość domyślna): Oznacza, że żadne słowa nie są automatycznie usuwane jako stop words. Jeśli chcesz użyć predefiniowanej 	listy stop words dla danego języka, mógłbyś podać np. stop_words='english' lub przekazać własną listę stringów.
+
+W Twoim przypadku: Żadne słowa nie są a priori usuwane jako stop words na tym etapie. Wszystkie słowa (po tokenizacji) będą brane pod 	uwagę, chyba że zostaną odfiltrowane przez min_df lub max_df.
+	
+3.ngram_range=(1, 1):
+Co robi: Definiuje zakres długości n-gramów (sekwencji słów), które mają być brane pod uwagę jako cechy. N-gram to ciąg n kolejnych słów.
+	(min_n, max_n):
+	min_n: Minimalna długość n-gramu.
+	max_n: Maksymalna długość n-gramu.
+	(1, 1): Oznacza, że brane pod uwagę będą tylko unigramy, czyli pojedyncze słowa. Np. z tekstu "Zielona Góra" cechami będą 	"zielona" i "góra".
+
+(1, 2): Oznaczałoby unigramy i bigramy (sekwencje dwóch słów). Np. z "Zielona Góra" cechami byłyby: "zielona", "góra", "zielona góra".
+	W Twoim przypadku: Jako cechy będą traktowane tylko pojedyncze słowa.
+
+4.min_df=5:
+Co robi: Minimalna częstotliwość dokumentowa (Document Frequency). Określa próg, poniżej którego term (słowo/n-gram) nie zostanie 	uwzględniony w słowniku.
+
+	Jeśli min_df jest liczbą całkowitą (jak tutaj 5), oznacza to, że słowo musi wystąpić w co najmniej 5 różnych dokumentach 	(wierszach w Twojej kolumnie Location), aby zostało uznane za cechę.
+	Jeśli min_df jest liczbą zmiennoprzecinkową w zakresie [0.0, 1.0], jest interpretowane jako proporcja dokumentów (np. min_df=0.01 	oznacza, że słowo musi wystąpić w co najmniej 1% dokumentów).
+Dlaczego się używa: Pomaga usunąć bardzo rzadkie słowa, które mogą być literówkami, specyficznymi nazwami własnymi występującymi tylko 	raz, lub po prostu szumem, który nie wnosi wiele informacji predykcyjnej.
+W Twoim przypadku: Słowo z kolumny Location musi pojawić się w co najmniej 5 różnych lokalizacjach (wierszach), aby stać się cechą TF-IDF.
+	
+5.max_df=0.95:
+Co robi: Maksymalna częstotliwość dokumentowa. Określa próg, powyżej którego term nie zostanie uwzględniony w słowniku.
+	Jeśli max_df jest liczbą zmiennoprzecinkową w zakresie [0.0, 1.0] (jak tutaj 0.95), oznacza to, że słowo, które występuje w więcej 	niż 95% wszystkich dokumentów, zostanie zignorowane.
+	Jeśli max_df jest liczbą całkowitą, oznacza to maksymalną bezwzględną liczbę dokumentów.
+Dlaczego się używa: Pomaga usunąć bardzo częste słowa, które pojawiają się w prawie wszystkich dokumentach i przez to nie mają dużej mocy 	dyskryminacyjnej (są mało informatywne dla rozróżniania dokumentów). Są to często słowa podobne do stop words, ale specyficzne dla 	danego korpusu.
+W Twoim przypadku: Jeśli jakieś słowo z kolumny Location pojawi się w ponad 95% wszystkich unikalnych lokalizacji, zostanie ono pominięte 	przy tworzeniu cech TF-IDF.
+
+
+Podsumowując, location_vectorizer skonfigurowany w ten sposób:
+	Weźmie teksty z kolumny Location.
+	Rozbije je na pojedyncze słowa (ngram_range=(1, 1)).
+	Zignoruje słowa, które występują w mniej niż 5 różnych lokalizacjach (min_df=5).
+	Zignoruje słowa, które występują w więcej niż 95% wszystkich lokalizacji (max_df=0.95).
+	Z pozostałych słów wybierze 100 najczęściej występujących (max_features=100).
+
+Dla tych 100 słów obliczy wartości TF-IDF (Term Frequency-Inverse Document Frequency), które odzwierciedlają ważność danego słowa w konkretnej lokalizacji w kontekście całego zbioru lokalizacji.
+Wynikiem działania location_vectorizer.fit_transform() będzie macierz, gdzie wiersze to poszczególne lokalizacje, a kolumny to te 100 wybranych słów, a wartości w komórkach to obliczone wagi TF-IDF.
