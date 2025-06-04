@@ -10,8 +10,8 @@ IF ERRORLEVEL 1 (
     exit /b
 )
 
-echo Uruchamianie skryptu nasluchujacego json_predictor_v3_3.py...
-python json_predictor_v3_3.py
+echo Uruchamianie skryptu nasluchujacego json_predictor_v3_5.py...
+python json_predictor_v3_5.py
 
 echo Zatrzymywanie skryptu (jesli doszlo do tego punktu bez bledu)...
 REM Dezaktywacja srodowiska (opcjonalne, zamkniecie okna i tak to zrobi)

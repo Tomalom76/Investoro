@@ -328,7 +328,7 @@ with mlflow.start_run(run_name=f'Automated_Run_NB63_{{time.strftime("%Y%m%d-%H%M
     
     #plt.tight_layout()
     #plt.show()
-    reg_exp.plot_model(best_model_from_compare, plot='feature')
+    #reg_exp.plot_model(best_model_from_compare, plot='feature')
     if reg_exp and best_model_from_compare:
         print("Predykcja na zbiorze testowym (z podziału PyCaret) przy użyciu dostrojonego modelu:")
         predict_model(best_model_from_compare) # To wyświetli metryki na wewnętrznym zbiorze testowym
@@ -500,7 +500,7 @@ with mlflow.start_run(run_name=f'Automated_Run_NB63_{{time.strftime("%Y%m%d-%H%M
                      logging.warning("Kolumna 'PredictedPrice_LGBM' nie została dodana do output_df po merge.")
     
                 try:
-                    output_path_final_script = r'C:\Tomek\Projekty\Investoro\DATA_OUT\data_out_20250602_124028.csv'
+                    output_path_final_script = r'C:\Tomek\Projekty\Investoro\DATA_OUT\data_out_20250604_164949.csv'
                     output_df.to_csv(output_path_final_script, index=False, sep=',')
                     logging.info("Finalny DataFrame (oryginalne dane + predykcje) zapisany do: %s", output_path_final_script)
                     if mlflow.active_run():

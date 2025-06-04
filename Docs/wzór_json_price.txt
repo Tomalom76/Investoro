@@ -1,0 +1,86 @@
+
+
+Oto szablon pliku JSON z polami, które są istotne dla naszego obecnego skryptu predykcyjnego, 
+wraz z krótkim opisem, dlaczego są potrzebne
+i jakie typy wartości są oczekiwane przez skrypt (przed jego wewnętrznymi konwersjami):
+
+{
+  "sale_record": {  // Klucz główny jest opcjonalny, możesz mieć listę obiektów bezpośrednio
+    "SaleId": 12345,             // int - Dla Twojej identyfikacji, nie używane przez model
+    "Area": 65.5,                // float - Powierzchnia, kluczowa cecha numeryczna
+    "NumberOfRooms": 3,          // int - Liczba pokoi, kluczowa cecha numeryczna
+    "BuiltYear": "2010",         // string lub int - Rok budowy (skrypt przekonwertuje na komponenty _year, _month, _day)
+    "Location": "Mazowieckie, Warszawa, Mokotów, Służewiec", // string - Do TF-IDF
+
+    // --- Oryginalne kolumny kategoryczne, które podlegają One-Hot Encoding ---
+    // Skrypt oczekuje tych kolumn, aby móc stworzyć odpowiednie warianty *_Wartość
+    "Type": "Mieszkania",        // string - np. "Mieszkania", "Dom", "Działka"
+    "BuildingType": "Blok",      // string - np. "Blok", "Kamienica", "Apartamentowiec", "Pozostałe"
+    "BuildingCondition": "GOOD", // string - np. "GOOD", "FOR_RENOVATION", "DEVELOPER_STATE", "AFTER_RENOVATION" (lub null/brak)
+    "OwnerType": "Pełna własność", // string - Wiele możliwych wartości, np. "Pełna własność", "Spółdzielcze własnościowe" itd.
+    "VoivodeshipNumber": "14",   // string lub int - Numer województwa (skrypt przekonwertuje na string przed OHE)
+    "CountyNumber": "65",        // string lub int - Numer powiatu
+    "CommunityNumber": "1",      // string lub int/float - Numer gminy (np. "1", "1.0")
+    "KindNumber": "1",           // string lub int/float - Rodzaj gminy
+
+    // --- Kolumny numeryczne/stringowe, które trafiają do modelu w oryginalnej formie LUB po prostym kodowaniu ---
+    "Floor": 2,                  // int - Piętro
+    "Floors": 10,                // int - Liczba pięter w budynku (może być null)
+    "CommunityScore": 7.5,       // float - Ocena społeczności (może być null)
+    "RegionNumber": 123456,      // int lub float - Numer regionu (w Twoim DEBUG_final_estimator_features.txt jest jako pojedyncza kolumna numeryczna)
+    "OfferFrom": "Biuro nieruchomości", // string - np. "Osoba prywatna", "Biuro nieruchomości", "Deweloper"
+                                        // Skrypt mapuje to na liczby 0, 1, 2.
+    "TypeOfMarket": "Wtórny",    // string - np. "Wtórny", "Pierwotny"
+                                        // Skrypt mapuje to na liczby 0, 1.
+
+
+    //     Jeśli nie są potrzebne, można je pominąć w JSONie, aby był krótszy.
+    //     Jeśli jednak jakiś krok preprocessingu na nich bazował
+    //     i wpływał na inne cechy, to może być problem. Ale przy obecnym podejściu
+    //     "bezpośrednio do finalnego estymatora", prawdopodobnie są zbędne.
+    //     Na wszelki wypadek zostawiam je tu jako opcjonalne.
+    // ---
+    // "OriginalId": "abcdef",
+    // "PortalId": 3,
+    // "Title": "Super mieszkanie w centrum",
+    // "Description": "Długi opis mieszkania...",
+    // "OfferPrice": null, // lub 700000.0
+    // "RealPriceAfterRenovation": null,
+    // "OriginalPrice": null,
+    // "PricePerSquareMeter": 10000.0, // Prawdopodobnie niepotrzebne, bo liczymy z Price i Area
+    // "DateAddedToDatabase": "2024-01-15 10:00:00",
+    // "DateAdded": "2024-01-15",
+    // "DateLastModification": null,
+    // "DateLastRaises": null,
+    // "NewestDate": "2024-01-15",
+    // "AvailableFrom": null, // lub "2024-02-01"
+    // "Link": "http://...",
+    // "Phone": "123456789",
+    // "MainImage": "http://...",
+    // "OtherImages": null, // lub "http://...;http://..."
+    // "NumberOfDuplicates": 0,
+    // "NumberOfRaises": 0,
+    // "NumberOfModifications": 0,
+    // "IsDuplicatePriceLower": false, // lub 0
+    // "IsDuplicatePrivateOwner": false, // lub 0
+    // "Score": 0,
+    // "ScorePrecision": 0,
+    // "NumberOfCommunityComments": 0,
+    // "NumberOfCommunityOpinions": 0,
+    // "Archive": null, // lub "tak"/"nie"
+    // "SubRegionNumber": null, // lub int
+    // "StreetNumber": "15A", // string
+    // "EncryptedId": "xyz123"
+  }
+}
+
+Kluczowe pola, które MUSZĄ być obecne i mieć sensowne wartości (lub null, jeśli model i preprocessing to obsługują):
+
+Area: Numeryczna.
+NumberOfRooms: Numeryczna (całkowita).
+BuiltYear: Rok jako string lub liczba.
+Location: String dla TF-IDF.
+Type, BuildingType, BuildingCondition, OwnerType, VoivodeshipNumber, CountyNumber, CommunityNumber, KindNumber: Stringi (lub liczby dla numerów), które będą użyte do stworzenia cech one-hot. Skrypt oczekuje, że wartości będą pasować do tych, które były w danych treningowych, aby odpowiednie kolumny *_Wartość mogły zostać poprawnie ustawione. Jeśli pojawi się nowa, nieznana kategoria, odpowiednia kolumna one-hot nie zostanie aktywowana (będzie miała 0).
+Floor, Floors: Numeryczne (całkowite, mogą być null).
+CommunityScore, RegionNumber: Numeryczne (mogą być null).
+OfferFrom, TypeOfMarket: Stringi, które skrypt mapuje na liczby.
