@@ -1,0 +1,22 @@
+{
+  "saleflats": [
+    {
+      "Area": 65.0,
+      "NumberOfRooms": 3,
+      "BuiltYear": 2015,
+      "Floor": 4,
+      "Floors": 10,
+      "Location": "Mazowieckie, Warszawa, Mokotów",
+      "Type": "Mieszkania",
+      "BuildingType": "Blok",
+      "BuildingCondition": "Do zamieszkania",
+      "OfferFrom": "Biuro nieruchomości",
+      "TypeOfMarket": "Wtórny",
+      "OwnerType": "Pełna własność",
+      "VoivodeshipNumber": 14,
+      "CountyNumber": 65,
+      "CommunityNumber": 1,
+      "KindNumber": 1
+    }
+  ]
+}

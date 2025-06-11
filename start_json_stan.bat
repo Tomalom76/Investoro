@@ -5,7 +5,7 @@ echo Aktywowanie srodowiska Conda "projekt1"...
 call C:\Tomek\Conda\condabin\activate.bat projekt1
 
 echo Uruchamianie skryptu json_state.py...
-python json_state.py
+python json_state_v3.py
 
 echo.
 echo Skrypt zakonczyl dzialanie lub zostal przerwany.

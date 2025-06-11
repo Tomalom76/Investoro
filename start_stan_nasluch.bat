@@ -9,7 +9,7 @@ REM REM Upewnij się, że ścieżka do activate.bat jest poprawna!
 
 
 echo Uruchamianie skryptu stan_nasluch.py...
-python stan_nasluch.py
+python stan_nasluch_v3.py
 
 echo.
 echo Skrypt zakonczyl dzialanie lub zostal przerwany.
