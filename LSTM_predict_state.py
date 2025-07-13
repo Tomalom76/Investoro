@@ -48,30 +48,32 @@ class PredictionHandler(FileSystemEventHandler):
             data_to_predict = pd.DataFrame(data_json)
             print(f"Wczytano {len(data_to_predict)} rekordów.")
 
-            # --- RĘCZNE PRZYGOTOWANIE DANYCH ---
-            # Tekst
+            # --- POPRAWIONA LOGIKA PRZYGOTOWANIA DANYCH ---
+            # 1. Przygotowanie danych tekstowych
             data_to_predict['Description'] = data_to_predict['Description'].astype(str).fillna('brak opisu')
             sequences = self.tokenizer.texts_to_sequences(data_to_predict['Description'])
             X_text = pad_sequences(sequences, maxlen=MAX_LEN)
 
-            # Dane tabelaryczne (z imputacją)
+            # 2. Przygotowanie danych tabelarycznych
+            # Najpierw tworzymy kolumnę 'year' z 'BuiltYear'
             data_to_predict['year'] = pd.to_datetime(data_to_predict['BuiltYear'], errors='coerce').dt.year
-            # Prosta imputacja - można ją rozbudować, jeśli potrzeba
-            for col in NUMERIC_FEATURES + CATEGORICAL_FEATURES:
-                if data_to_predict[col].isnull().any():
-                     # Używamy najprostszej strategii - uzupełnienie zerem lub 'BRAK'
-                    if data_to_predict[col].dtype in ['float64', 'int64']:
-                        data_to_predict[col].fillna(0, inplace=True)
-                    else:
-                        data_to_predict[col].fillna('BRAK', inplace=True)
             
-            X_tabular = self.preprocessor.transform(data_to_predict)
+            # Imputacja dla kolumn numerycznych
+            for col in NUMERIC_FEATURES:
+                data_to_predict[col] = pd.to_numeric(data_to_predict[col], errors='coerce').fillna(0) # Uzupełnij zerem lub inną sensowną wartością
+
+            # Imputacja dla kolumn kategorycznych
+            for col in CATEGORICAL_FEATURES:
+                data_to_predict[col] = data_to_predict[col].fillna('BRAK') # Uzupełnij stringiem 'BRAK'
+
+            # Transformacja za pomocą nauczonego preprocesora
+            X_tabular = self.preprocessor.transform(data_to_predict[NUMERIC_FEATURES + CATEGORICAL_FEATURES])
 
             # --- Predykcja ---
             print("Wykonuję predykcje...")
             probabilities = self.model.predict([X_text, X_tabular])
             label_indices = np.argmax(probabilities, axis=1)
-            predicted_conditions = [self.label_mapping[str(i)] for i in label_indices] # Klucze w JSON to stringi
+            predicted_conditions = [self.label_mapping[str(i)] for i in label_indices]
 
             data_to_predict['Predict_State'] = predicted_conditions
             data_to_predict['Predict_Score'] = np.max(probabilities, axis=1)
