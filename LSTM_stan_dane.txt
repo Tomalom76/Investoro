@@ -1,0 +1,91 @@
+nazwa notebooka: Stany_LSTM_v1.ipynb
+środowisko: projekt_stan
+bazy, które wzięły udział w szkoleniu:
+ 1. saleflats_2024_dateAdded_polska.csv
+ 2. saleflats_2024_newestDate_polska.csv
+baza z wynikową predykcją:
+ 1. Data_state_LSTM_predicted_full.csv 
+model został zapisany do pliku:
+ 1. model_lstm_stan.keras
+
+środowisko modelu:
+  env_projekt_stan.yaml
+procedura instalacji:
+  conda env create -f env_projekt_stan.yaml
+
+aby uruchomić predykcje na pojedynczym json:
+w konsoli z aktywowanym środowiskiem projekt_stan w katalogu: C:\Users\Ai\Desktop\Tomek\Investoro
+python LSTM_predict_state.py
+nasłuch w katalogu 2JSON_STATE
+wynikowy json w katalogu 2JSON_STATE_OUT
+
+Obowiązkowe pola JSON:
+
+Oto lista obowiązkowych pól:
+Cechy numeryczne:
+	Area (liczba, np. 55.5)
+	Price (liczba, np. 550000)
+	NumberOfRooms (liczba, np. 3)
+	Floor (liczba, np. 2)
+	Floors (liczba, np. 4)
+Cechy kategoryczne:
+	BuildingType (tekst, np. "Blok", "Kamienica" lub null)
+	OfferFrom (tekst, np. "Agencja", "Osoba prywatna" lub null)
+	TypeOfMarket (tekst, np. "wtórny", "pierwotny" lub null)
+Cecha daty:
+	BuiltYear (tekst w formacie YYYY-MM-DD, np. "2010-01-01", lub null)
+Cecha tekstowa:
+	Description (długi tekst z opisem mieszkania)
+
+Przykład JSON:
+
+[
+  {
+    "Area": 54.5,
+    "Price": 580000,
+    "NumberOfRooms": 3,
+    "Floor": 4,
+    "Floors": 10,
+    "BuildingType": "Blok",
+    "OfferFrom": "Agencja",
+    "TypeOfMarket": "wtórny",
+    "BuiltYear": "1998-05-20",
+    "Description": "Mieszkanie do remontu, świetna lokalizacja blisko metra. Duży potencjał inwestycyjny. Wymaga odświeżenia. Okna PCV, ale podłogi do wymiany. Zapraszam do oglądania."
+  }
+]
+
+ANALIZA:
+
+1. Gałąź Tekstowa (LSTM) - Najważniejszy Czynnik
+to właśnie opisy (Description) miały największy i decydujący wpływ na wynik.
+Sieć LSTM, połączona z warstwą Embedding, nauczyła się rozpoznawać kluczowe frazy i słowa, które bezpośrednio wskazują na stan mieszkania. Model nie traktuje słów jako pojedynczych bytów, ale rozumie ich znaczenie w kontekście. 
+Nauczył się, że:
+Słowa/frazy takie jak: "remontu", "do odświeżenia", "wymaga", "potencjał", "własnej aranżacji" silnie wskazują na FOR_RENOVATION.
+Słowa/frazy: "po remoncie", "świeżo", "wykończone", "wysoki standard", "gotowe do wprowadzenia", "umeblowane" mocno korelują z AFTER_RENOVATION.
+
+Słowa/frazy: "deweloperski", "od dewelopera", "odbiór", "rynek pierwotny", "bez PCC" to niemal pewny DEVELOPER_STATE.
+
+Słowa/frazy: "dobrym stanie", "zamieszkania", "zadbane", "nie wymaga wkładu" wskazują na GOOD.
+
+
+
+2. Gałąź Tabelaryczna (Dense) - Czynniki Wspomagające
+
+Ta część modelu analizowała dane ustrukturyzowane. Chociaż jej wpływ był mniejszy niż tekstu, z pewnością dostarczyła cennych informacji i pomogła w przypadkach, gdy opis był niejednoznaczny. 
+Najważniejsze kolumny w tej gałęzi to:
+BuiltYear (a konkretnie year): To jest bardzo silny predyktor. Nowe budynki to prawie zawsze stan deweloperski. Stare (np. przed 1960) mają znacznie większą szansę na bycie do remontu. Model na pewno nauczył się tych zależności.
+
+TypeOfMarket: To niemal deterministyczna cecha. Jeśli wartość to 'pierwotny', model nauczył się, że to na 99.9% DEVELOPER_STATE. To druga najważniejsza cecha tabelaryczna.
+
+Price i Area (a pośrednio cena za metr): Te cechy pomagają w subtelniejszych rozróżnieniach.
+Bardzo niska cena za metr w danej lokalizacji może sugerować stan FOR_RENOVATION.
+Bardzo wysoka cena za metr, w połączeniu z niskim rokiem budowy, może wskazywać na AFTER_RENOVATION w wysokim standardzie.
+
+BuildingType: Typ budynku ma znaczenie. Kamienica ma statystycznie większą szansę wymagać remontu niż Apartamentowiec.
+
+OfferFrom: Oferty od 'deweloper' lub biur specjalizujących się w rynku pierwotnym również są silną wskazówką.
+
+Skuteczność predykcji:
+Mimo imponującej ogólnej dokładności, model w obecnej formie nie rozwiązuje w pełni problemu biznesowego, którym jest rozróżnianie wszystkich czterech stanów. Problem leży w ekstremalnie małej liczbie przykładów dla klas FOR_RENOVATION i AFTER_RENOVATION w Twoim finalnym, czystym zbiorze danych. Nawet techniki takie jak ważenie klas nie pomogą, jeśli model ma do nauki tylko kilkanaście przykładów.
+
+Rekomendacja na przyszłość: Aby poprawić ten model, jedyną drogą jest pozyskanie większej liczby oznaczonych danych, zwłaszcza dla klas FOR_RENOVATION i AFTER_RENOVATION.

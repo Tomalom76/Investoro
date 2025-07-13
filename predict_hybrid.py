@@ -99,10 +99,10 @@ Nie dodawaj żadnego innego tekstu ani komentarzy poza samym obiektem JSON."""},
     # Już nie potrzebujesz budować tego długiego promptu w f-stringu
     # prompt = f""" ... """
 
-    print(" -> Wywołuję API OpenAI (gpt-4o)...")
+    print(" -> Wywołuję API OpenAI (gpt-4o-mini)...")
     try:
         completion = client.chat.completions.create(
-            model="gpt-4o", # lub gpt-4o-mini jeśli wolisz, ale gpt-4o może być lepszy
+            model="gpt-4o-mini", # lub gpt-4o-mini jeśli wolisz, ale gpt-4o może być lepszy
             response_format={"type": "json_object"}, # To jest kluczowe do wymuszenia JSON
             messages=messages # Użyj listy messages z oddzielonym opisem
         )
